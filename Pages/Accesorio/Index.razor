@@ -1,0 +1,128 @@
+@page "/Accesorio"
+
+<h3>Accesorio y cagadores Disponibles</h3>
+
+<div style="background-color: #E6F0FF; padding: 10px;">
+    <div class="row">
+        @foreach (var accesorio in accesorios)
+        {
+            <div class="col-md-3">
+                <div style="background-color: #FFFFFF; padding: 10px; margin-bottom: 20px;">
+                    <img src="@accesorio.Imagen" style="width: 70%;" />
+                    <div>
+                        <strong>@accesorio.Nombre</strong>
+                    </div>
+                    <div>
+                        Precio: @accesorio.Precio
+                    </div>
+                    <div>
+                        Descripcion: @accesorio.Descripcion;
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" @onclick="() => AgregarAlCarrito(accesorio)">
+                            <span class="bi bi-cart-fill"></span> Elegir
+                        </button>
+                        <button class="btn btn-secondary" @onclick="() => EditarCantidad(accesorio)">
+                            <span class="bi bi-pencil-fill"></span> Editar
+                        </button>
+                        <button class="btn btn-danger" @onclick="() => EliminarAccesorio(accesorio.Id)">
+                            <span class="bi bi-trash-fill"></span> Eliminar
+                        </button>
+                           
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div style="background-color: #F9F9F9; padding: 10px; margin-top: 20px;">
+    <div>
+        Cantidad de Accesorio agregados: @cantidadaccesorio
+    </div>
+    <button class="btn btn-primary" @onclick="MostrarDetalles">
+        <span class="bi bi-chevron-down"></span> Ver detalles
+    </button>
+</div>
+
+@if (mostrarDetalles)
+{
+    <div style="background-color: #E6F0FF; padding: 10px; margin-top: 20px;">
+        <h5>Detalles de los celulares</h5>
+        @if (accesoriosSeleccionados.Count > 0)
+        {
+            @foreach (var accesorio in accesoriosSeleccionados)
+            {
+                <div>
+                    <strong>@accesorio.Nombre</strong> - Cantidad: @accesorio.Cantidad
+                </div>
+            }
+        }
+        else
+        {
+            <div>No hay celulares seleccionados.</div>
+        }
+    </div>
+}
+
+@code {
+    private List<AccesorioResponse> accesorios = new List<AccesorioResponse>();
+    private List<AccesorioResponse> accesoriosSeleccionados = new List<AccesorioResponse>();
+
+    private int cantidadaccesorio = 0;
+    private bool mostrarDetalles = false;
+
+    [Inject]
+    private IAccesorioServices accesorioServices { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await accesorioServices.ObtenerListaCelulares();
+
+        if (result.Success)
+        {
+            accesorios = result.Data;
+        }
+    }
+
+    private async void AgregarAlCarrito(AccesorioResponse accesorio)
+    {
+        var result = await accesorioServices.Crear(new AccesorioResquest
+        {
+            Nombre = accesorio.Nombre,
+            Descripcion= accesorio.Descripcion,
+            Precio = accesorio.Precio,
+            Imagen = accesorio.Imagen,
+            Cantidad = accesorio.Cantidad
+        });
+
+        if (result.Success)
+        {
+            cantidadaccesorio++;
+            
+        }
+    }
+
+    private async void EditarCantidad(AccesorioResponse accesorio)
+    {
+        // Lógica para editar la cantidad de un celular seleccionado
+        
+    }
+
+    private async void EliminarAccesorio(int id)
+    {
+        var result = await accesorioServices.Eliminar(id);
+
+        if (result.Success)
+        {
+            accesorios = accesorios.Where(c => c.Id != id).ToList();
+            accesoriosSeleccionados = accesoriosSeleccionados.Where(c => c.Id != id).ToList();
+            cantidadaccesorio--;
+        }
+    }
+
+    private void MostrarDetalles()
+    {
+        mostrarDetalles = !mostrarDetalles;
+    }
+}

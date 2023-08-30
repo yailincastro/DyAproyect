@@ -1,0 +1,64 @@
+﻿<div class="card w-75 mb-2">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title">Datos personales</h5>
+    </div>
+    <div class="card-body">
+        <EditForm OnValidSubmit="ChangeNameMethod" Model="data">
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre:</label>
+                <InputText type="text" class="form-control" id="name" @bind-Value=data.Nombre></InputText>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(sms))
+            {
+                <div class="alert">
+                    <p class="@sms_type">@sms</p>
+                </div>
+            }
+            <button type="submit" class="btn btn-primary">Cambiar</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await authState.GetAuthenticationStateAsync();
+        if (auth.User.Identity!.IsAuthenticated)
+        {
+            var _Id = auth.User.FindFirstValue(ClaimTypes.NameIdentifier)??"0";
+            var _Nombre = auth.User.FindFirstValue(ClaimTypes.Name)??"Guest";
+
+            if (Id != 0) _Id = Id.ToString();
+            if (!string.IsNullOrWhiteSpace(Name)) _Nombre= Name;
+
+            data = new UsuarioRequest() { Id = int.Parse(_Id), Nombre = _Nombre };
+        }
+    }
+
+    public string? sms { get; set; }
+    public string sms_type { get; set; } = "text-danger";
+
+    public UsuarioRequest data { get; set; } = new UsuarioRequest();
+
+    [Parameter]
+    public int Id { get; set; } = 0;
+    [Parameter]
+    public string Name { get; set; } = "";
+
+    public async void ChangeNameMethod()
+    {
+        sms = "";
+        var r = await userManagerService.Update(data);
+        if (r.Success)
+        {
+            sms_type = "text-success";
+            sms = r.Message;
+        }
+        else
+        {
+            sms_type = "text-danger";
+            sms = r.Message;
+        }
+        StateHasChanged();
+    }
+}

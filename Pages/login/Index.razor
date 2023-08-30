@@ -1,0 +1,61 @@
+@page "/login"
+@inherits LayoutComponentBase
+
+<div class="login-page">
+    <div class="login-content">
+        <div class="login-box">
+            <h2>DyA Proyect</h2>
+            <div class="login-form">
+                <EditForm OnValidSubmit="LoginMethod" Model="user">
+                    <div class="mb-3">
+                        <label for="nickname" class="form-label">Usuario</label>
+                        <InputText id="nickname" class="form-control" @bind-Value=user.username></InputText>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Contraseña</label>
+                        <InputText type="Password" class="form-control" id="password" @bind-Value=user.password></InputText>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(sms))
+                    {
+                        <div class="alert alert-danger">
+                            <p>@sms</p>
+                        </div>
+                    }
+                    <button type="submit" class="btn btn-primary">Acceder</button>
+                </EditForm>
+
+                <hr />
+
+                <p>No tienes cuenta? Regístrate:</p>
+                <button class="btn btn-secondary" @onclick="ShowRegisterForm">Registrar</button>
+
+                @if (showRegister)
+                {
+                    <div class="register-form">
+                        <h4>Registro</h4>
+                        <!-- Formulario de registro aquí (nombre, usuario, clave) -->
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+     public LoginResquest user { get; set; } = new LoginResquest();
+    private string? sms = "";
+    public async Task LoginMethod()
+    {
+        var result = await UserManagerService.Login(user);
+        if (result.Success) urlManager.NavigateTo("/",true);
+        else sms = result.Message;
+    }
+
+    // ... Tu código C# aquí
+    private bool showRegister = false;
+    
+    private void ShowRegisterForm()
+    {
+        showRegister = !showRegister;
+    }
+}

@@ -1,0 +1,147 @@
+@page "/Celular"
+<h3>celulares Disponibles</h3>
+
+<div style="background-color: #E6F0FF; padding: 10px;">
+    <div class="row">
+        @foreach (var celular in celulares)
+        {
+            <div class="col-md-3">
+                <div style="background-color: #FFFFFF; padding: 10px; margin-bottom: 20px;">
+                    <img src="@celular.Imagen" style="width: 70%;" />
+                    <div>
+                        <strong>@celular.Nombre</strong>
+                    </div>
+                    <div>
+                        Precio: @celular.Precio
+                    </div>
+                    <div>
+                        Descripcion: @celular.Descripcion;
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" @onclick="() => AgregarAlCarrito(celular)">
+                            <span class="bi bi-cart-fill"></span> Elegir
+                        </button>
+                        <button class="btn btn-secondary" @onclick="() => EditarCantidad(celular)">
+                            <span class="bi bi-pencil-fill"></span> Editar
+                        </button>
+                        <button class="btn btn-danger" @onclick="() => EliminarCelular(celular.Id)">
+                            <span class="bi bi-trash-fill"></span> Eliminar
+                        </button>
+                           
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div style="background-color: #F9F9F9; padding: 10px; margin-top: 20px;">
+    <div>
+        Cantidad de celulares agregados: @cantidadCelulares
+    </div>
+    <button class="btn btn-primary" @onclick="MostrarDetalles">
+        <span class="bi bi-chevron-down"></span> Ver detalles
+    </button>
+</div>
+
+@if (mostrarDetalles)
+{
+    <div style="background-color: #E6F0FF; padding: 10px; margin-top: 20px;">
+        <h5>Detalles de los celulares</h5>
+        @if (celularesSeleccionados.Count > 0)
+        {
+            @foreach (var celular in celularesSeleccionados)
+            {
+                <div>
+                    <strong>@celular.Nombre</strong> - Cantidad: @celular.Cantidad
+                </div>
+
+                <div>
+                         @*Total de la compra: @CalcularTotalCompra().ToString("C")*@
+                         Total de la compra: @celular.Total.ToString("C")
+                </div>
+            }
+            <div>
+            Total General: @celularesSeleccionados.Sum(c=>c.Total).ToString("C")
+            </div>
+        }
+        else
+        {
+            <div>No hay celulares seleccionados.</div>
+        }
+    </div>
+}
+
+@code {
+    private List<CelularResponse> celulares = new List<CelularResponse>();
+    private List<CelularResponse> celularesSeleccionados = new List<CelularResponse>();
+
+    private int cantidadCelulares = 0;
+    private bool mostrarDetalles = false;
+
+    [Inject]
+    private ICelularServices celularServices { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await celularServices.ObtenerListaCelulares();
+
+        if (result.Success)
+        {
+            celulares = result.Data;
+        }
+    }
+
+    private async void AgregarAlCarrito(CelularResponse celular)
+    {
+        var result = await celularServices.Crear(new CelularResquest
+        {
+            Nombre = celular.Nombre,
+            Descripcion= celular.Descripcion,
+            Precio = celular.Precio,
+            Imagen = celular.Imagen,
+            Cantidad = celular.Cantidad
+        });
+
+        if (result.Success)
+        {
+            cantidadCelulares++;
+            
+        }
+    }
+
+    private async void EditarCantidad(CelularResponse celular)
+    {
+        // Lógica para editar la cantidad de un celular seleccionado
+        
+    }
+
+    private async void EliminarCelular(int id)
+    {
+        var result = await celularServices.Eliminar(id);
+
+        if (result.Success)
+        {
+            celulares = celulares.Where(c => c.Id != id).ToList();
+            celularesSeleccionados = celularesSeleccionados.Where(c => c.Id != id).ToList();
+            cantidadCelulares--;
+        }
+    }
+    private decimal CalcularTotalCompra()
+{
+   decimal total = 0;
+    foreach (var celular in celularesSeleccionados)
+    {
+        total += celular.Precio * celular.Cantidad;
+    }
+    return total; 
+}
+
+    private void MostrarDetalles()
+    {
+        mostrarDetalles = !mostrarDetalles;
+        StateHasChanged();
+          decimal total = 0;
+   
+    }
+}

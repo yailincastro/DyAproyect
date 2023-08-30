@@ -1,0 +1,23 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using DyAproyect
+@using DyAproyect.Shared
+@using DyAproyect.Data.Services
+@using DyAproyect.Data.Services.Interfaces
+@using DyAproyect.Data.Resquest.Usuario
+@using System.Security.Claims
+@using DyAproyect.Autenticacion
+
+@inject IAccesorioServices AccesorioServices;
+@inject ICelularServices CelularServices;
+@inject IClienteServices ClienteServices;
+@inject IVentaServices VentaServices;
+@inject IUserManagerService UserManagerService;
+@inject IAutenticacion Autenticacion;
+@inject NavigationManager urlManager;

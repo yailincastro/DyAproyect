@@ -1,0 +1,14 @@
+@using DyAproyect.Data;
+@using DyAproyect.Data.Response;
+@using DyAproyect.Data.Resquest;
+@using DyAproyect.Data.Entities;
+@using DyAproyect.Data.Services.Interfaces;
+@using DyAproyect.Data.Services;
+@using DyAproyect.Autenticacion;
+@using DyAproyect.Data.Resquest.Usuario;
+@using DyAproyect.Data.Constant;
+@using Microsoft.AspNetCore.Components;
+
+@inject IUserManagerService UserManagerService
+@inject ICurrentUserService currentUserService
+@inject NavigationManager urlManager

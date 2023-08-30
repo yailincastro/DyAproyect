@@ -1,0 +1,161 @@
+@page "/facturacion"
+@attribute [Authorize (Roles= Roles.Admin)];
+<h3>Facturación</h3>
+
+<button @onclick="() => ShowForm = true">Nueva Factura</button>
+<button @onclick="MostrarFacturas">Mostrar Facturas</button>
+
+@if (ShowForm)
+{
+    <div>
+        <h4>@TituloForm</h4>
+        <div>
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" @bind="request.Nombre" />
+        </div>
+        <div>
+            <label for="apellido">Apellido:</label>
+            <input id="apellido" @bind="request.Apellido" />
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre del artículo</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var detalle in detallesFactura)
+                {
+                    <tr>
+                        <td><input @bind="detalle.NombreArticulo" /></td>
+                        <td><input @bind="detalle.PrecioUnitario" type="number" step="0.01" /></td>
+                        <td><input @bind="detalle.Cantidad" type="number" /></td>
+                        <td>@detalle.Total</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button @onclick="AgregarDetalle">+</button>
+
+        <div>
+            <button @onclick="Send">Guardar</button>
+            <button @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+}
+
+<div>
+    <input @bind="Filtro" placeholder="Filtrar facturas" />
+    <button @onclick="CargarVenta">Buscar</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var venta in Ventas)
+        {
+            <tr>
+                <td>@venta.Nombre</td>
+                <td>@venta.Apellido</td>
+                <td>@venta.PrecioUnitario</td>
+                <td>@venta.Cantidad</td>
+                <td>
+                    <button @onclick="() => ModificarFactura(venta.Id)">Modificar</button>
+                    <button @onclick="() => EliminarFactura(venta)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public string nombre;
+    public string apellido;
+    public string TituloForm => request.Id == 0 ? "Nueva Factura" : "Modificar Factura";
+    public bool ShowForm { get; set; } = false;
+    public string Filtro { get; set; } = "";
+   // public List<VentaResponse> mostrafactura {get; set;}= new List<VentaResponse>();
+    private List<DetalleFactura> detallesFactura = new List<DetalleFactura>();
+
+    public VentaRequest request { get; set; } = new VentaRequest();
+    public List<VentaResponse> Ventas { get; set; } = new List<VentaResponse>();
+
+    void Cancelar()
+    {
+        request = new VentaRequest();
+        detallesFactura.Clear();
+        ShowForm = false;
+    }
+
+    async Task CargarVenta()
+    {
+        var Resulta = await VentaServices.Consultar(Filtro);
+        if (Resulta.Success)
+        {
+            Ventas = Resulta.Data!;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarVenta();
+    }
+
+    public async Task Send()
+    {
+        var e = request.Id == 0 ? await VentaServices.Crear(request) : await VentaServices.Modificar(request);
+        if (e.Success)
+        {
+            Cancelar();
+            await CargarVenta();
+            StateHasChanged();
+        }
+    }
+
+    public async Task EliminarFactura(VentaResponse venta)
+    {
+        var resulta = await VentaServices.Eliminar(venta.ToRequest());
+        if (resulta.Success)
+        {
+            await CargarVenta();
+            StateHasChanged();
+        }
+    }
+
+    public void ModificarFactura(int Id)
+    {
+        ShowForm = true;
+        request = Ventas.FirstOrDefault(c => c.Id == Id)?.ToRequest() ?? new VentaRequest();
+        detallesFactura.Clear(); // Si quieres limpiar los detalles al modificar
+    }
+
+    public void MostrarFacturas()
+    {
+      // mostrafactura=Ventas; // Lógica para mostrar las facturas
+    
+    }
+
+    public void AgregarDetalle()
+    {
+        detallesFactura.Add(new DetalleFactura());
+    }
+
+    private class DetalleFactura
+    {
+        public string NombreArticulo { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public int Cantidad { get; set; }
+        public decimal Total => PrecioUnitario * Cantidad;
+    }
+}
